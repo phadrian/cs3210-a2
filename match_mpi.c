@@ -299,7 +299,7 @@ void updateBallPosition(int rank, Field *field, Ball *ball, Player *player) {
                 if (rank == fieldRank) {
                     field->ball.x = newPosition[0];
                     field->ball.y = newPosition[1];
-                    printf("ball is now in field process %d at (%d, %d)\n", rank, field->ball.x, field->ball.y);
+                    // printf("ball is now in field process %d at (%d, %d)\n", rank, field->ball.x, field->ball.y);
                 }
             }
         }
@@ -352,12 +352,12 @@ void determineKicker(int rank, Field *field, Ball *ball, Player *player) {
 
     // Only the field process with the ball handles the ball challenges
     if (isField(rank) && ballIsInField(field)) {
-        printf("ball is in field process %d\n", rank);
-        printf("ball challenges: ");
-        for (p = 0; p < PLAYERS; p++) {
-            printf("%d ", challenge[p]);
-        }
-        printf("\n");
+        // printf("ball is in field process %d\n", rank);
+        // printf("ball challenges: ");
+        // for (p = 0; p < PLAYERS; p++) {
+        //     printf("%d ", challenge[p]);
+        // }
+        // printf("\n");
         int highestBallChallenge = 0;
         for (p = 0; p < PLAYERS; p++) {
             if (challenge[p] >= highestBallChallenge) {
@@ -371,7 +371,7 @@ void determineKicker(int rank, Field *field, Ball *ball, Player *player) {
                 highestBallChallenge = challenge[p];
             }
         }
-        printf("highest ball challenge=%d, selected kicker=player %d\n", highestBallChallenge, selectedKicker);
+        // printf("highest ball challenge=%d, selected kicker=player %d\n", highestBallChallenge, selectedKicker);
     }
 
     // Broadcast the selectedKicker to all players
@@ -405,7 +405,7 @@ void kickBall(int rank, Field *field, Ball *ball, Player *player, int round) {
     // 2. Kick to teammate within kick range
     // 3. Kick towards goal
     if (!isField(rank) && player->kicked == PLAYER_KICKED_BALL) {
-        printf("player %d kicking ball\n", rank);
+        // printf("player %d kicking ball\n", rank);
         int kickRange = player->kick * 2;
         int scoringDirection = getScoringDirection(player, round);
         int goalStartX, goalStartY, goalEndX, goalEndY;
@@ -423,7 +423,7 @@ void kickBall(int rank, Field *field, Ball *ball, Player *player, int round) {
         if (scoreFromTopGoalPost || scoreFromBottomGoalPost) {
             ball->x = FIELD_LENGTH / 2;
             ball->y = FIELD_WIDTH / 2;
-            printf("player %d scored from (%d, %d) with kickrange=%d\n", rank, player->currX, player->currY, kickRange);
+            // printf("player %d scored from (%d, %d) with kickrange=%d\n", rank, player->currX, player->currY, kickRange);
             return;
         }
 
@@ -449,7 +449,7 @@ void kickBall(int rank, Field *field, Ball *ball, Player *player, int round) {
                         if (teammateDistanceToGoal < ownDistanceToGoal) {
                             ball->x = teammateX;
                             ball->y = teammateY;
-                            printf("scoring left: player %d (%d, %d) passed to player %d (%d, %d)\n", rank, player->currX, player->currY, p + FIELDS, teammateX, teammateY);
+                            // printf("scoring left: player %d (%d, %d) passed to player %d (%d, %d)\n", rank, player->currX, player->currY, p + FIELDS, teammateX, teammateY);
                             return;
                         }
                     } else {
@@ -463,7 +463,7 @@ void kickBall(int rank, Field *field, Ball *ball, Player *player, int round) {
                         if (teammateDistanceToGoal < ownDistanceToGoal) {
                             ball->x = teammateX;
                             ball->y = teammateY;
-                            printf("scoring right: player %d (%d, %d) passed to player %d (%d, %d)\n", rank, player->currX, player->currY, p + FIELDS, teammateX, teammateY);
+                            // printf("scoring right: player %d (%d, %d) passed to player %d (%d, %d)\n", rank, player->currX, player->currY, p + FIELDS, teammateX, teammateY);
                             return;
                         }
                     }
@@ -479,11 +479,11 @@ void kickBall(int rank, Field *field, Ball *ball, Player *player, int round) {
 
         // Handle cases when ball is kicked out of field, reposition in center
         if (ball->x < 0 || ball->x >= FIELD_LENGTH || ball->y < 0 || ball->y >= FIELD_WIDTH) {
-            printf("ball kicked out of field (%d, %d), repositioning to center\n", ball->x, ball->y);
+            // printf("ball kicked out of field (%d, %d), repositioning to center\n", ball->x, ball->y);
             ball->x = FIELD_LENGTH / 2;
             ball->y = FIELD_WIDTH / 2;
         }
-        printf("ball is now at (%d, %d)\n", ball->x, ball->y);
+        // printf("ball is now at (%d, %d)\n", ball->x, ball->y);
     }
 }
 
@@ -607,12 +607,14 @@ int main(int argc, char *argv[]) {
         // Ensure field is updated before proceeding to next round
         updatePlayerData(rank, &field, &ball, &player);
         MPI_Barrier(MPI_COMM_WORLD);
-        printField(rank, &field);
+        // printField(rank, &field);
 
         // Gather all the field data in field process 0 for output
         if (isField(rank)) {
+            int ballPosition[2];
             int data[TEAMS][PLAYERS_PER_TEAM][11];
 
+            // Gather all the player data for each field process
             int sendBuffer[11];
             int receiveBuffer[FIELDS * 11];
             for (p = 0; p < PLAYERS; p++) {
@@ -669,9 +671,33 @@ int main(int argc, char *argv[]) {
                 }
             }
 
+            // Gather all the ball position data from all field processes
+            int ballSendBuffer[2];
+            int ballReceiveBuffer[FIELDS * 2];
+            if (isField(rank)) {
+                ballSendBuffer[0] = field.ball.x;
+                ballSendBuffer[1] = field.ball.y;
+                MPI_Gather(ballSendBuffer, 2, MPI_INT, ballReceiveBuffer, 2, MPI_INT, 0, COMM);
+
+                if (rank == 0) {
+                    int i;
+                    for (i = 0; i < FIELDS * 2; i += 2) {
+                        int ballX = ballReceiveBuffer[i];
+                        int ballY = ballReceiveBuffer[i + 1];
+                        // printf("%d %d\n", ballX, ballY);
+                        if (ballX != DO_NOT_EXIST && ballY != DO_NOT_EXIST) {
+                            ballPosition[0] = ballX;
+                            ballPosition[1] = ballY;
+                            break;
+                        }
+                    }
+                }
+            }
+
             if (rank == 0) {
                 int t, i;
                 printf("%d\n", r);
+                printf("%d %d\n", ballPosition[0], ballPosition[1]);
                 for (t = 0; t < TEAMS; t++) {
                     for (p = 0; p < PLAYERS_PER_TEAM; p++) {
                         for (i = 0; i < 11; i++) {
