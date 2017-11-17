@@ -26,7 +26,7 @@
 #define GOAL_RIGHT_END_X 127
 #define GOAL_RIGHT_END_Y 51
 
-#define ROUNDS 900
+#define ROUNDS 2700
 #define TEAMS 2
 #define PROCS 34
 #define FIELDS 12
