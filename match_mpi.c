@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <math.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -117,6 +116,10 @@ int getScoringDirection(Player *player, int round) {
     int scoreDirectionA = round < ROUNDS / 2 ? RIGHT : LEFT;
     int scoreDirectionB = scoreDirectionA == RIGHT ? LEFT : RIGHT;
     return player->team == TEAM_A ? scoreDirectionA : scoreDirectionB;
+}
+
+int getMin(int value1, int value2) {
+    return value2 < value1 ? value2 : value1;
 }
 
 int goalScored(Ball *ball, Player *player, int round) {
@@ -444,8 +447,8 @@ void kickBall(int rank, Field *field, Ball *ball, Player *player, int round) {
                         int ownDistanceToTopGoalPost = getDistanceBetweenPoints(GOAL_LEFT_START_X, GOAL_LEFT_START_Y, player->currX, player->currY);
                         int ownDistanceToBottomGoalPost = getDistanceBetweenPoints(GOAL_LEFT_END_X, GOAL_LEFT_END_Y, player->currX, player->currY);
 
-                        int teammateDistanceToGoal = fmin(teammateDistanceToTopGoalPost, teammateDistanceToBottomGoalPost);
-                        int ownDistanceToGoal = fmin(ownDistanceToTopGoalPost, ownDistanceToBottomGoalPost);
+                        int teammateDistanceToGoal = getMin(teammateDistanceToTopGoalPost, teammateDistanceToBottomGoalPost);
+                        int ownDistanceToGoal = getMin(ownDistanceToTopGoalPost, ownDistanceToBottomGoalPost);
                         if (teammateDistanceToGoal < ownDistanceToGoal) {
                             ball->x = teammateX;
                             ball->y = teammateY;
@@ -458,8 +461,8 @@ void kickBall(int rank, Field *field, Ball *ball, Player *player, int round) {
                         int ownDistanceToTopGoalPost = getDistanceBetweenPoints(GOAL_RIGHT_START_X, GOAL_RIGHT_START_Y, player->currX, player->currY);
                         int ownDistanceToBottomGoalPost = getDistanceBetweenPoints(GOAL_RIGHT_END_X, GOAL_RIGHT_END_Y, player->currX, player->currY);
 
-                        int teammateDistanceToGoal = fmin(teammateDistanceToTopGoalPost, teammateDistanceToBottomGoalPost);
-                        int ownDistanceToGoal = fmin(ownDistanceToTopGoalPost, ownDistanceToBottomGoalPost);
+                        int teammateDistanceToGoal = getMin(teammateDistanceToTopGoalPost, teammateDistanceToBottomGoalPost);
+                        int ownDistanceToGoal = getMin(ownDistanceToTopGoalPost, ownDistanceToBottomGoalPost);
                         if (teammateDistanceToGoal < ownDistanceToGoal) {
                             ball->x = teammateX;
                             ball->y = teammateY;
