@@ -1,0 +1,2 @@
+mpicc training_mpi.c -o training_mpi
+mpicc match_mpi.c -o match_mpi

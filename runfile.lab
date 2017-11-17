@@ -1,0 +1,2 @@
+mpirun -np 12 -machinefile machinefile.lab ./training_mpi
+mpirun -np 34 -machinefile machinefile.lab ./match_mpi
